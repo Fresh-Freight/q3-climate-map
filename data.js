@@ -95,15 +95,20 @@ const LEGEND_TEMP = [
   { cls: "above-strong",   label: "Above-normal 60%+" },
   { cls: "above-moderate", label: "Above-normal 50-60%" },
   { cls: "above-slight",   label: "Above-normal 40-50%" },
-  { cls: "near",           label: "Equal chances" }
+  { cls: "near",           label: "Equal chances" },
+  { cls: "below-slight",   label: "Below-normal 40-50%" },
+  { cls: "below-moderate", label: "Below-normal 50-60%" },
+  { cls: "below-strong",   label: "Below-normal 60%+" }
 ];
 
 const LEGEND_PRECIP = [
+  { cls: "above-strong",   label: "Above-normal 60%+" },
   { cls: "above-moderate", label: "Above-normal 50-60%" },
   { cls: "above-slight",   label: "Above-normal 40-50%" },
   { cls: "near",           label: "Equal chances" },
   { cls: "below-slight",   label: "Below-normal 40-50%" },
-  { cls: "below-moderate", label: "Below-normal 50-60%" }
+  { cls: "below-moderate", label: "Below-normal 50-60%" },
+  { cls: "below-strong",   label: "Below-normal 60%+" }
 ];
 
 // 14 produce-origin markers, grouped into 7 USDA regions.
