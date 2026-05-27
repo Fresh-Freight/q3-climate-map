@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Q3 2026 Climate Outlook &mdash; Produce Freight Briefing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>NOAA Climate Outlook &mdash; Q3 2026</h1>
+      <p class="subtitle">Three-month temperature &amp; precipitation outlook for July&ndash;September 2026, with produce-region freight context.</p>
+    </header>
+
+    <div class="controls">
+      <div class="toggle-group" role="tablist" aria-label="Outlook view">
+        <button class="toggle active" data-view="temperature" role="tab" aria-selected="true">Temperature</button>
+        <button class="toggle" data-view="precipitation" role="tab" aria-selected="false">Precipitation</button>
+      </div>
+      <button class="reset-link" id="reset-callout" hidden>Reset</button>
+    </div>
+
+    <div class="map-wrap">
+      <svg id="map" role="img" aria-label="U.S. map showing NOAA Q3 2026 outlook with produce region markers"></svg>
+      <div class="legend" id="legend"></div>
+    </div>
+
+    <section class="callout" id="callout" aria-live="polite">
+      <h2 class="callout-title" id="callout-title">Q3 Macro Outlook</h2>
+      <p class="callout-body" id="callout-body"></p>
+    </section>
+
+    <p class="attribution">Source: NOAA Climate Prediction Center &middot; Map &amp; freight interpretation by the analytics team.</p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
