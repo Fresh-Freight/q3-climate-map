@@ -63,7 +63,7 @@ html, body {
 
 .toggle-group {
   display: inline-flex;
-  background: #f0efec;
+  background: #f4f4f4;
   border-radius: 8px;
   padding: 4px;
   gap: 4px;
@@ -189,7 +189,7 @@ html, body {
 .callout {
   margin-top: 22px;
   padding: 18px 20px;
-  background: #faf9f6;
+  background: #f4f4f4;
   border-left: 4px solid var(--brand-orange);
   border-radius: 6px;
 }
