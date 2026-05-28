@@ -22,7 +22,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: transparent;
+  background: #fafafa;
   color: var(--text-primary);
   font-family: 'Open Sans', system-ui, sans-serif;
   font-size: 15px;
@@ -30,19 +30,19 @@ html, body {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1060px;
   margin: 32px auto;
   padding: 28px 28px 22px;
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
 }
 
 .header h1 {
   margin: 0 0 6px;
   font-family: 'Montserrat', system-ui, sans-serif;
   font-weight: 700;
-  font-size: 26px;
+  font-size: 24px;
   letter-spacing: -0.01em;
 }
 
