@@ -12,7 +12,9 @@
   --text-muted: #8a8a8a;
   --border-soft: #d8d8d8;
   --state-stroke: #ffffff;
-  --base-state-fill: #f4f4f2;
+  /* Same as equal-chances grey: land with no outlook zone reads as equal
+     chances, so neutral areas are uniform (no lighter base-land patches). */
+  --base-state-fill: #e5e5e5;
 }
 
 * {
