@@ -47,10 +47,22 @@ html, body {
 }
 
 .subtitle {
-  margin: 0 0 18px;
+  margin: 0 0 6px;
   color: var(--text-secondary);
   font-size: 14px;
   max-width: 720px;
+}
+
+.meta-line {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+  font-size: 12px;
+  letter-spacing: 0.01em;
+}
+
+.meta-line strong {
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .controls {
@@ -93,20 +105,6 @@ html, body {
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
-.reset-link {
-  font-family: 'Open Sans', sans-serif;
-  font-size: 13px;
-  background: none;
-  border: none;
-  color: var(--brand-orange);
-  cursor: pointer;
-  padding: 4px 8px;
-}
-
-.reset-link:hover {
-  text-decoration: underline;
-}
-
 .map-wrap {
   position: relative;
   width: 100%;
@@ -120,10 +118,10 @@ html, body {
   background: transparent;
 }
 
-/* Overlay layer */
-.overlay-state {
-  stroke: var(--state-stroke);
-  stroke-width: 0.75;
+/* NOAA contour polygons. No internal stroke so adjacent probability
+   bands flow into one another; the white state grid sits on top. */
+.overlay-poly {
+  stroke: none;
   transition: opacity 200ms ease;
 }
 
@@ -138,20 +136,6 @@ html, body {
   stroke: #ffffff;
   stroke-width: 0.75;
   pointer-events: none;
-}
-
-/* Markers */
-.marker {
-  fill: var(--brand-orange);
-  stroke: #ffffff;
-  stroke-width: 1;
-  cursor: pointer;
-  transition: r 140ms ease, stroke-width 140ms ease;
-}
-
-.marker:hover,
-.marker.active {
-  stroke-width: 2;
 }
 
 /* Legend */
@@ -183,31 +167,6 @@ html, body {
 .legend-label {
   font-family: 'Open Sans', sans-serif;
   white-space: nowrap;
-}
-
-/* Callout */
-.callout {
-  margin-top: 22px;
-  padding: 18px 20px;
-  background: #faf9f6;
-  border-left: 4px solid var(--brand-orange);
-  border-radius: 6px;
-}
-
-.callout-title {
-  margin: 0 0 6px;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
-}
-
-.callout-body {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.55;
 }
 
 .attribution {

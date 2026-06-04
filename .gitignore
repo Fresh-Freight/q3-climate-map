@@ -4,3 +4,10 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# Raw NOAA CPC source archives + shapefiles (~250 MB) — not for git.
+# The app only needs the parsed data/outlook-*.geojson, regenerated via mapshaper.
+data/raw/
+
+# Local, machine-specific Claude Code settings
+.claude/settings.local.json

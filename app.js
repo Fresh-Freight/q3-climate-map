@@ -1,8 +1,12 @@
 // NOAA Q3 2026 Climate Outlook map
-// Renders an Albers USA choropleth overlay (temperature / precipitation)
-// with produce-region markers and a hover-driven freight callout.
+// Renders NOAA CPC probability contour polygons directly (smooth zones that
+// flow across state boundaries the way NOAA's published seasonal outlook maps
+// do), with state outlines drawn on top as a light reference grid.
 
 const US_ATLAS_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+const TEMP_URL = "data/outlook-temp.geojson";
+const PRECIP_URL = "data/outlook-precip.geojson";
+const META_URL = "data/outlook-meta.json";
 
 const VIEW_BOX = { width: 960, height: 600 };
 
@@ -13,51 +17,66 @@ const svg = d3.select("#map")
 const projection = d3.geoAlbersUsa().scale(1200).translate([VIEW_BOX.width / 2, VIEW_BOX.height / 2]);
 const path = d3.geoPath(projection);
 
+const defs = svg.append("defs");
+
 const layers = {
   base: svg.append("g").attr("class", "layer-base"),
   overlay: svg.append("g").attr("class", "layer-overlay"),
-  outline: svg.append("g").attr("class", "layer-outline"),
-  markers: svg.append("g").attr("class", "layer-markers")
+  outline: svg.append("g").attr("class", "layer-outline")
 };
 
 let currentView = "temperature";
-let pinnedRegion = null;     // tap-to-pin on mobile / click
-let hoveredRegion = null;
+const outlook = { temperature: null, precipitation: null };
 
-const calloutTitleEl = document.getElementById("callout-title");
-const calloutBodyEl = document.getElementById("callout-body");
-const resetBtn = document.getElementById("reset-callout");
 const legendEl = document.getElementById("legend");
+const validEl = document.getElementById("valid-season");
+const issuedEl = document.getElementById("issued-date");
 
-renderCallout();
+Promise.all([
+  d3.json(US_ATLAS_URL),
+  d3.json(TEMP_URL),
+  d3.json(PRECIP_URL),
+  d3.json(META_URL)
+]).then(([us, tempGeo, precipGeo, meta]) => {
+  outlook.temperature = tempGeo;
+  outlook.precipitation = precipGeo;
 
-d3.json(US_ATLAS_URL).then(us => {
+  renderMeta(meta);
+
   const states = topojson.feature(us, us.objects.states);
   const stateMesh = topojson.mesh(us, us.objects.states, (a, b) => a !== b);
 
   projection.fitSize([VIEW_BOX.width, VIEW_BOX.height], states);
 
+  // Clip path: union of state geometries = US landmass. Overlay polygons are
+  // clipped to this so contours stop at the coast instead of bleeding into the
+  // ocean or off-map areas.
+  defs.append("clipPath")
+    .attr("id", "us-clip")
+      .selectAll("path")
+      .data(states.features)
+      .join("path")
+        .attr("d", path);
+
+  layers.overlay.attr("clip-path", "url(#us-clip)");
+
+  // Light base fill so EC / no-data areas read as land, not empty space.
   layers.base.selectAll("path.base-state")
     .data(states.features)
     .join("path")
       .attr("class", "base-state")
       .attr("d", path);
 
-  layers.overlay.selectAll("path.overlay-state")
-    .data(states.features)
-    .join("path")
-      .attr("class", "overlay-state")
-      .attr("d", path)
-      .attr("fill", d => overlayColor(d.properties.name, currentView));
+  drawOverlay();
 
+  // State outlines on top of the fills, as a faint reference grid.
   layers.outline.append("path")
     .attr("class", "state-outline")
     .attr("d", path(stateMesh));
 
-  drawMarkers();
   drawLegend();
 }).catch(err => {
-  console.error("Failed to load us-atlas:", err);
+  console.error("Failed to load map data:", err);
   svg.append("text")
     .attr("x", VIEW_BOX.width / 2)
     .attr("y", VIEW_BOX.height / 2)
@@ -67,61 +86,45 @@ d3.json(US_ATLAS_URL).then(us => {
     .text("Map data failed to load. Check your network and refresh.");
 });
 
-function overlayColor(stateName, view) {
-  const table = view === "precipitation" ? PRECIPITATION_OUTLOOK : TEMPERATURE_OUTLOOK;
-  const cls = table[stateName] || "near";
-  return COLOR_RAMP[cls];
+function renderMeta(meta) {
+  if (!meta) return;
+  if (validEl && meta.validSeasonLabel) validEl.textContent = meta.validSeasonLabel;
+  if (issuedEl && meta.issueDate) {
+    const d = new Date(meta.issueDate + "T00:00:00Z");
+    issuedEl.textContent = d.toLocaleDateString("en-US", {
+      year: "numeric", month: "long", day: "numeric", timeZone: "UTC"
+    });
+  }
 }
 
-function drawMarkers() {
-  const points = MARKERS.map(m => {
-    const xy = projection([m.lng, m.lat]);
-    return { ...m, x: xy ? xy[0] : null, y: xy ? xy[1] : null };
-  }).filter(m => m.x !== null);
-
-  const sel = layers.markers.selectAll("circle.marker")
-    .data(points, d => d.id)
-    .join("circle")
-      .attr("class", "marker")
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .attr("r", 5)
-      .attr("data-region", d => d.region)
-      .on("mouseenter", (event, d) => {
-        hoveredRegion = d.region;
-        renderCallout();
-        highlightRegion(d.region);
-      })
-      .on("mouseleave", () => {
-        hoveredRegion = null;
-        renderCallout();
-        highlightRegion(pinnedRegion);
-      })
-      .on("click", (event, d) => {
-        event.stopPropagation();
-        pinnedRegion = d.region;
-        hoveredRegion = d.region;
-        renderCallout();
-        highlightRegion(pinnedRegion);
-      });
-
-  // accessibility
-  sel.append("title").text(d => d.name);
+// Bin (Cat, Prob) to the discrete legend colors so the map matches the legend.
+// Prob is the lower bound of the NOAA band: 33 → 33–40%, 40 → 40–50%, 50 → 50%+.
+function colorFor(feature) {
+  const cat = feature.properties.Cat;
+  const prob = Number(feature.properties.Prob);
+  if (!cat || cat === "EC") return COLOR_RAMP["near"];
+  if (cat === "Above") {
+    if (prob >= 50) return COLOR_RAMP["above-strong"];
+    if (prob >= 40) return COLOR_RAMP["above-moderate"];
+    return COLOR_RAMP["above-slight"];
+  }
+  if (cat === "Below") {
+    if (prob >= 50) return COLOR_RAMP["below-strong"];
+    if (prob >= 40) return COLOR_RAMP["below-moderate"];
+    return COLOR_RAMP["below-slight"];
+  }
+  return COLOR_RAMP["near"];
 }
 
-function highlightRegion(regionId) {
-  layers.markers.selectAll("circle.marker")
-    .classed("active", d => d.region === regionId)
-    .transition().duration(140)
-      .attr("r", d => d.region === regionId ? 7.5 : 5);
-}
-
-function renderCallout() {
-  const regionId = hoveredRegion || pinnedRegion;
-  const data = regionId ? REGION_CALLOUTS[regionId] : DEFAULT_CALLOUT;
-  calloutTitleEl.textContent = data.title;
-  calloutBodyEl.textContent = data.body;
-  resetBtn.hidden = !pinnedRegion;
+function drawOverlay() {
+  const geo = outlook[currentView];
+  if (!geo) return;
+  layers.overlay.selectAll("path.overlay-poly")
+    .data(geo.features, (_, i) => i)
+    .join("path")
+      .attr("class", "overlay-poly")
+      .attr("d", path)
+      .attr("fill", d => colorFor(d));
 }
 
 function drawLegend() {
@@ -142,7 +145,7 @@ function drawLegend() {
   }
 }
 
-// Toggle wiring
+// Toggle wiring: fade overlay out, swap the contour set, fade back in.
 document.querySelectorAll(".toggle").forEach(btn => {
   btn.addEventListener("click", () => {
     const view = btn.getAttribute("data-view");
@@ -154,34 +157,17 @@ document.querySelectorAll(".toggle").forEach(btn => {
       b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    // Fade overlay out, swap fill, fade back in
-    layers.overlay.selectAll("path.overlay-state")
+    layers.overlay.selectAll("path.overlay-poly")
       .transition().duration(200)
         .style("opacity", 0)
-        .on("end", function () {
-          d3.select(this)
-            .attr("fill", d => overlayColor(d.properties.name, currentView))
+        .on("end", () => {
+          drawOverlay();
+          layers.overlay.selectAll("path.overlay-poly")
+            .style("opacity", 0)
             .transition().duration(200)
               .style("opacity", 1);
         });
 
     drawLegend();
   });
-});
-
-// Tap-elsewhere / Reset clears pinned region (mobile tap-to-reveal)
-svg.on("click", () => {
-  if (pinnedRegion) {
-    pinnedRegion = null;
-    hoveredRegion = null;
-    renderCallout();
-    highlightRegion(null);
-  }
-});
-
-resetBtn.addEventListener("click", () => {
-  pinnedRegion = null;
-  hoveredRegion = null;
-  renderCallout();
-  highlightRegion(null);
 });

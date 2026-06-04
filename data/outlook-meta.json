@@ -1,0 +1,9 @@
+{
+  "issueDate": "2026-05-21",
+  "validSeason": "JAS 2026",
+  "validSeasonLabel": "July–August–September 2026",
+  "sourceFiles": {
+    "temp": "lead2_JAS_temp.shp",
+    "prcp": "lead2_JAS_prcp.shp"
+  }
+}
