@@ -5,5 +5,6 @@
   "sourceFiles": {
     "temp": "lead2_JAS_temp.shp",
     "prcp": "lead2_JAS_prcp.shp"
-  }
+  },
+  "note": "Two zones manually adjusted to match reference charts; see scripts/adjust-outlook.cjs. All other contours are unmodified NOAA CPC data."
 }
